@@ -20,55 +20,45 @@ def obfuscate(seed, image, fcoordinates, outputf, operator):
     random.seed(seed)
     # save coordinates of faces founded on image
     fdata = ''
-    # print('COORDENADAS', fcoordinates)
 
     with Image.open(image) as im:
         px = im.load()
 
         # Face loop
         for (x, y, w, h) in fcoordinates:
-
-            #fdata = fdata + ' ' + ' '.join([str(x), str(y), str(w), str(h)])
+            #join all facial coordinates by using '|' separator
             fdata = fdata + '|' + ' '.join([str(x), str(y), str(w), str(h)])
             # X and Y are -> class 'numpy.int32'
             # so we changing them to -> class 'int'. Native python types
             if not isinstance(x, int) or not isinstance(y, int):
                 x = x.item()
                 y = y.item()
-            # print(x, y, w, h)
             # drawing loop
             for j in range(w):
                 for i in range(h):
                     # check if we are on even pixel
                     even = True if j % 2 == 0 else False
-                    # print('LOS TIPOS DE VARIABLE SON: ', type(x), type(y), type(x1), type(y1))
                     pixel = (x + j, y + i)
-                    # print('Coordenadas de pixel son:', pixel)
                     # read pixel data
                     pixData = px[x + j, y + i]
-                    #print(pixData)
+                    # save pixel info in r,g,b variables
                     r, g, b = pixData[0], pixData[1], pixData[2]
+                    # paint function
                     r, g, b, randstate = paintAlg(r, g, b, extractorsum(even, operator), random.getstate())
                     # we recover the random seed state
                     random.setstate(randstate)
                     # Border treatment of pixels 0 < pixel <= 255
                     r, g, b = pixLimits(r, g, b)
 
-                    # print('AFTER: ', r, g, b)
                     im.putpixel(pixel, (r, g, b))
-            #print('COORDENADAS CARA: ', x, y, w, h)
-
+        # we delete last character from pixel data, '|'
         fdata = fdata[1:]
+        # we add final escape character, as we're using it in steganography
         fdata += '\0'
-        #print(fdata)
-        #print("Acabo bien aparentemente")
-        #im.show()
         im.save(outputf)
-        # print('COORDENADAS', fcoordinates)
-        #print(type(fcoordinates))
         return 0, fdata
 
-
+# DEPRECATED
 def defSeed(seed):
     random.seed(seed)
     a = []
@@ -86,14 +76,9 @@ def defSeed(seed):
         if i > 90:
             a.append(random.randint(151, 170))
     random.shuffle(a)
-    # print(random.choice(a))
-    # print(random.choice(a))
-    # print(random.choice(a))
-    # print(a)
-    # print(len(a))
     return a
 
-
+# Border treatment function
 def pixLimits(r, g, b):
     if r < 0:
         r = r + 256
@@ -119,7 +104,6 @@ def extractorsum(even, operator):
 
 def paintAlg(r, g, b, sum, randstate):
     random.setstate(randstate)
-    #a = defSeed()
     if sum:
         r = r + random.randint(30, 130)
         g = g + random.randint(30, 130)

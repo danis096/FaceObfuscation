@@ -1,10 +1,10 @@
-# NOTE: execute gui.py instead of main.py
+# NOTE:
 import faceRec
 import draw
 import gui
 import stego
 
-SCALEFACTOR = 1.1
+SCALEFACTOR = 1.07
 
 # seed == deterministic number generator seed
 def obfuscate(seed, imagePath, outputFolder, operator):
@@ -45,7 +45,6 @@ def handleExitCode(code):
 
 def stringToList(faceData):
     faceData = faceData[:-1]
-    #print('HAY QUE BORRAR ULTIMO CHAR?')
     finalList = []
     rawfaces = faceData.rsplit('|')
     for rawcoords in rawfaces:
@@ -54,31 +53,33 @@ def stringToList(faceData):
         for coord in rawcoord:
             templist.append(int(coord))
         finalList.append(templist)
-        #templist.clear()
     return finalList
-
+# operator = True -> obfuscation process
+# operator = False -> reverse process
 def manager(seed, imagePath, outputFolder, operator):
-    #print("Ha entrado en el manager")
     outputFolderP = setOutputName(imagePath, outputFolder)
     #Here we obfuscate the faces found in image
     if operator == True:
         faceCoordinates = faceRec.faceRec(imagePath, SCALEFACTOR)
+        # check if faces found in image
         if len(faceCoordinates) <= 0:
             print(imagePath)
+            # return code 2, see handleexitcode()
             return 2
         else:
             code, faceData = draw.obfuscate(seed, imagePath, faceCoordinates, outputFolderP, operator)
         if faceData == '':
             return 2
         else:
+            # transform facial coordinates into ascii before hide in image
             fdataascii = faceData.encode('ascii')
+            # steganography function
             stego.stego_hide(outputFolderP, fdataascii, outputFolderP)
             return 0
         return 0
     # Here we reverse obfuscation of the faces found in image
     elif operator == False:
         faceData = stego.stego_find(imagePath)
-        #print('ESTAS SON COORDENADAS GUARDADAS!:', faceData)
         fcextracted = stringToList(faceData)
         if faceData == '':
             return 2

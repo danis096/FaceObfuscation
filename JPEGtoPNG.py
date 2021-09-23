@@ -1,3 +1,4 @@
+# Just used to transform jpeg into png for dataset
 import sys
 import draw
 import faceRec
